@@ -1,15 +1,20 @@
 #include <FastLED.h>
+#include <BluetoothSerial.h>
 
 // FastLED
 #define NUM_LEDS 12
 #define DATA_PIN 18
 CRGB leds[NUM_LEDS];
 
+// BT
+String deviceName = "BTLamp";
+BluetoothSerial SerialBT;
+
 // Colors
 CRGB myColor(255, 0, 0);
 CRGB gradientColor1(0, 0, 0);
 CRGB gradientColor2(0, 0, 0);
-uint8_t brightness = 255;
+uint8_t brightness = 32;
 
 // Menu
 short menu = 0;
@@ -19,12 +24,14 @@ bool stringComplete = false;
 String inputString = "";
 
 void setup() {
+  SerialBT.begin(deviceName);
   Serial.begin(115200);
   inputString.reserve(200);
   FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS);
 }
 
 void loop() {
+  serialBTEvent();
   if (stringComplete) {
     //option recive
     if (catchValue("menu") >= 0)
@@ -74,6 +81,17 @@ void loop() {
 void fillColor(CRGB color) {
   for (int i = 0; i < NUM_LEDS; i++)
     leds[i] = color;
+}
+
+//BT
+void serialBTEvent() {
+  while (SerialBT.available()) {
+    char inChar = (char)SerialBT.read();
+    if (inChar == '\n') {
+      stringComplete = true;
+    } else
+      inputString += inChar;
+  }
 }
 
 // Serial functions
